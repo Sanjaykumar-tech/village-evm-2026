@@ -2,139 +2,242 @@
 <html lang="ta">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="theme-color" content="#000000">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>🏡 கிராம வாக்குப்பதிவு - Tamil Nadu Village EVM</title>
     <link rel="stylesheet" href="style.css">
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    <script>
+        (function() {
+            emailjs.init("_ELd3lCtDaNVeUST_");
+        })();
+    </script>
 </head>
 <body>
-    <div class="container">
-        <!-- Village Header -->
-        <div class="village-header">
-            <div class="village-info">
-                <div class="village-icon">🏡</div>
-                <div class="village-title">
-                    <h1>கிராம வாக்குப்பதிவு 2026</h1>
-                    <p>Village Level Survey - Tamil Nadu Election</p>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-icon">🗳️</div>
+                <h1>🔐 வாக்காளர் சரிபார்ப்பு</h1>
+                <p>தமிழ்நாடு கிராம வாக்குப்பதிவு 2026</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="input-group">
+                    <label>📧 மின்னஞ்சல்</label>
+                    <input type="email" id="emailInput" placeholder="example@gmail.com" required>
                 </div>
-            </div>
-            <div class="village-stats">
-                <div class="stat-item">
-                    <div class="stat-label">மொத்த வாக்குகள்</div>
-                    <div class="stat-number" id="totalVotes">0</div>
+                
+                <div class="input-group hidden" id="otpGroup">
+                    <label>🔢 OTP குறியீடு</label>
+                    <div class="otp-input-group">
+                        <input type="text" id="otpInput" maxlength="6" placeholder="000000" pattern="[0-9]{6}">
+                        <button type="button" id="verifyOtpBtn" class="verify-btn">சரிபார்</button>
+                    </div>
+                    <div class="otp-timer" id="otpTimer">OTP காலாவதியாக 5:00</div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">பதிவு செய்தவர்கள்</div>
-                    <div class="stat-number" id="votersCount">0</div>
+                
+                <button type="button" id="sendOtpBtn" class="login-btn">📨 OTP அனுப்பு</button>
+                <button type="button" id="loginWithOtpBtn" class="login-btn hidden">🔓 உள்நுழைக</button>
+            </form>
+            
+            <div class="login-footer">
+                <p>🔑 Admin: admin@evm.com</p>
+                <p>👥 Public: any@gmail.com</p>
+                <div class="login-note">
+                    <span>⚠️ OTP 6 இலக்கங்கள்</span>
                 </div>
-            </div>
-        </div>
-
-        <!-- Village Info Card -->
-        <div class="village-card" id="villageCard">
-            <div class="village-detail">
-                <span class="icon-large">📍</span>
-                <span class="font-size-18 font-bold" id="villageName">குணமங்கலம்</span>
-            </div>
-            <div class="village-detail">
-                <span class="icon-large">🗳️</span>
-                <span class="font-size-18" id="boothNumber">வாக்குச்சாவடி: TN-15-157-158</span>
-            </div>
-            <div class="village-detail">
-                <span class="icon-large">👥</span>
-                <span class="font-size-18" id="surveyorName">கணக்கெடுப்பாளர்: குணமங்கலம் TVK</span>
-            </div>
-        </div>
-
-        <!-- Main Survey Panel -->
-        <div class="survey-panel">
-            <div class="survey-header">
-                <h2>
-                    <span class="icon-xxlarge">🗳️</span>
-                    உங்கள் வாக்கை பதிவு செய்யுங்கள்
-                </h2>
-                <div id="timerDisplay" class="vote-timer hidden">
-                    <span>⏳</span>
-                    <span id="timerValue">5</span> வினாடிகள்
-                </div>
-            </div>
-
-            <!-- Simple Search -->
-            <div class="search-box">
-                <input type="text" id="searchInput" class="search-input" 
-                       placeholder="🔍 கட்சி பெயர் அல்லது சின்னம் தேடுக... (முன்னுரிமை இல்லை)">
-                <select id="allianceFilter" class="filter-select" aria-label="கட்சி கூட்டணி மூலம் வடிகட்ட">
-                    <option value="all">அனைத்து கட்சிகள்</option>
-                    <option value="SECULAR">மதச்சார்பற்ற முன்னணி</option>
-                    <option value="NDA">தேசிய ஜனநாயக கூட்டணி</option>
-                    <option value="Left">இடது முன்னணி</option>
-                    <option value="Others">பிற கட்சிகள்</option>
-                </select>
-            </div>
-
-            <!-- Party Buttons Grid - Simple & Clear -->
-            <div id="partyGrid" class="party-grid">
-                <!-- Parties will be loaded here -->
-            </div>
-
-            <!-- Simple Instructions -->
-            <p class="text-center instruction-text">
-                <span class="instruction-badge">
-                    👆 ஒரு கட்சியின் மேல் கிளிக் செய்து வாக்களிக்கவும்
-                </span>
-            </p>
-        </div>
-
-        <!-- Results Section - Simple Table -->
-        <div class="results-section">
-            <div class="results-header">
-                <h3>
-                    <span class="icon-xlarge">📊</span>
-                    நேரடி முடிவுகள் - குணமங்கலம்
-                </h3>
-                <button class="reset-btn" onclick="villageEVM.resetVotes()">
-                    <span>🔄</span> மீட்டமை
-                </button>
-            </div>
-
-            <div class="table-container">
-                <table class="results-table">
-                    <thead>
-                        <tr>
-                            <th>தரவரிசை</th>
-                            <th>சின்னம்</th>
-                            <th>கட்சி</th>
-                            <th>தமிழ் பெயர்</th>
-                            <th>வாக்குகள்</th>
-                            <th>சதவீதம்</th>
-                            <th>முன்னேற்றம்</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsBody">
-                        <!-- Results will be loaded here -->
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Total Votes -->
-            <div class="total-votes-footer">
-                <span class="total-votes-text">
-                    மொத்த வாக்குகள்: <span id="totalVotesFooter">0</span>
-                </span>
             </div>
         </div>
     </div>
 
-    <!-- Confirmation Modal - Simple -->
+    <!-- Main App -->
+    <div id="mainApp" class="main-app hidden">
+        <div class="container">
+            <!-- Header with Logout Button -->
+            <div class="village-header">
+                <div class="village-info">
+                    <div class="village-icon">🏡</div>
+                    <div class="village-title">
+                        <h1>கிராம வாக்குப்பதிவு 2026</h1>
+                        <p>Village Level Survey - Tamil Nadu Election</p>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="village-stats">
+                        <div class="stat-item">
+                            <div class="stat-label">மொத்த வாக்குகள்</div>
+                            <div class="stat-number" id="totalVotes">0</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">பதிவு செய்தவர்கள்</div>
+                            <div class="stat-number" id="votersCount">10</div>
+                        </div>
+                    </div>
+                    <button class="logout-btn" onclick="villageEVM.logout()">
+                        <span>🚪</span> வெளியேறு
+                    </button>
+                </div>
+            </div>
+
+            <!-- Village Info with User Type -->
+            <div class="village-card">
+                <div class="village-detail">
+                    <span>📍</span>
+                    <span id="villageName">குணமங்கலம்</span>
+                </div>
+                <div class="village-detail">
+                    <span>🗳️</span>
+                    <span id="boothNumber">வாக்குச்சாவடி: TN-15-157-158</span>
+                </div>
+                <div class="village-detail">
+                    <span>👥</span>
+                    <span id="surveyorName">கணக்கெடுப்பாளர்: குணமங்கலம் TVK</span>
+                </div>
+                <div class="village-detail" id="userEmailDisplay">
+                    <span>📧</span>
+                    <span id="userEmail"></span>
+                    <span id="userRoleBadge" class="role-badge"></span>
+                </div>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div class="tab-navigation">
+                <button class="tab-btn active" onclick="villageEVM.switchTab('vote')" id="tabVoteBtn">
+                    <span>🗳️</span> வாக்களி
+                </button>
+                <button class="tab-btn" onclick="villageEVM.switchTab('suggestions')" id="tabSuggestBtn">
+                    <span>💡</span> கோரிக்கைகள்
+                </button>
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('results')" id="tabResultsBtn">
+                    <span>📊</span> முடிவுகள்
+                </button>
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.showAdminDashboard()" id="tabAdminBtn">
+                    <span>⚙️</span> நிர்வாகம்
+                </button>
+            </div>
+
+            <!-- VOTE TAB (Visible to all) -->
+            <div id="voteTab" class="tab-content active">
+                <div class="survey-panel">
+                    <div class="survey-header">
+                        <h2><span>🗳️</span> உங்கள் வாக்கை பதிவு செய்யுங்கள்</h2>
+                        <div id="timerDisplay" class="vote-timer hidden">
+                            <span>⏳</span>
+                            <span id="timerValue">2</span> வினாடிகள்
+                        </div>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="search-input" placeholder="🔍 கட்சி பெயர் தேடுக...">
+                        <select id="allianceFilter" class="filter-select" 
+                            title="கட்சி கூட்டணி மூலம் வடிகட்டு"
+                            aria-label="கட்சி கூட்டணி மூலம் வடிகட்டு">
+                            <option value="all">அனைத்து கட்சிகள்</option>
+                            <option value="SECULAR">மதச்சார்பற்ற முன்னணி</option>
+                            <option value="NDA">தேசிய ஜனநாயக கூட்டணி</option>
+                            <option value="Left">இடது முன்னணி</option>
+                            <option value="Others">பிற கட்சிகள்</option>
+                        </select>
+                    </div>
+
+                    <div id="partyGrid" class="party-grid"></div>
+
+                    <p class="text-center instruction-text">
+                        <span class="instruction-badge">👆 கட்சி மேல் கிளிக் செய்து வாக்களிக்கவும்</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- SUGGESTIONS TAB (Visible to all) -->
+            <div id="suggestionsTab" class="tab-content hidden">
+                <div class="survey-panel">
+                    <div class="survey-header">
+                        <h2><span>💡</span> மக்களின் கோரிக்கைகள்</h2>
+                    </div>
+
+                    <!-- Add Suggestion Form -->
+                    <div class="suggestion-form">
+                        <h3>📝 புதிய கோரிக்கை</h3>
+                        <input type="text" id="suggestionTitle" class="search-input" placeholder="தலைப்பு (எ.கா: புதிய சாலை)" maxlength="100">
+                        <textarea id="suggestionDesc" class="suggestion-textarea" placeholder="விவரம்..." rows="3" maxlength="500"></textarea>
+                        <input type="text" id="suggesterName" class="search-input" placeholder="உங்கள் பெயர் (விரும்பினால்)">
+                        <button class="submit-suggestion-btn" onclick="villageEVM.addSuggestion()">
+                            <span>📤</span> கோரிக்கை சமர்ப்பி
+                        </button>
+                    </div>
+
+                    <!-- Suggestions List -->
+                    <div class="suggestions-list">
+                        <h3>📋 அண்மைய கோரிக்கைகள்</h3>
+                        <div id="suggestionsContainer" class="suggestions-container">
+                            <!-- Suggestions will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS TAB (ADMIN ONLY) -->
+            <div id="resultsTab" class="tab-content hidden">
+                <div class="results-section">
+                    <div class="results-header">
+                        <h3><span>📊</span> நேரடி முடிவுகள் - குணமங்கலம்</h3>
+                        <button class="reset-btn admin-only" onclick="villageEVM.resetVotes()">
+                            <span>🔄</span> மீட்டமை
+                        </button>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>தரம்</th>
+                                    <th>சின்னம்</th>
+                                    <th>கட்சி</th>
+                                    <th>தமிழ் பெயர்</th>
+                                    <th>வாக்குகள்</th>
+                                    <th>%</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody"></tbody>
+                        </table>
+                    </div>
+
+                    <div class="total-votes-footer">
+                        <span class="total-votes-text">மொத்த வாக்குகள்: <span id="totalVotesFooter">0</span></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Modal -->
+    <div id="adminModal" class="modal" style="display: none;">
+        <div class="modal-content admin-modal-content">
+            <div class="modal-header">
+                <h2>⚙️ நிர்வாக கட்டுப்பாட்டு பலகம்</h2>
+                <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'">&times;</button>
+            </div>
+            <div id="adminModalBody" class="modal-body">
+                <!-- Admin content will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
     <div id="confirmModal" class="modal">
         <div class="modal-content">
             <h3>✅ வாக்கு உறுதிப்படுத்தல்</h3>
-            <div id="modalPartySymbol" class="modal-party">🌅</div>
-            <div id="modalPartyName" class="modal-party-name">திமுக</div>
-            <div id="modalPartyTamil" class="modal-party-tamil">திராவிட முன்னேற்றக் கழகம்</div>
+            <div id="modalPartySymbol" class="modal-party"></div>
+            <div id="modalPartyName" class="modal-party-name"></div>
+            <div id="modalPartyTamil" class="modal-party-tamil"></div>
             <div class="confirmation-container">
-                <span class="confirmation-text">
-                    இந்த கட்சிக்கு வாக்களிக்க உறுதியா?
-                </span>
+                <span class="confirmation-text">இந்த கட்சிக்கு வாக்களிக்க உறுதியா?</span>
             </div>
             <div class="modal-buttons">
                 <button onclick="villageEVM.confirmVote()" class="confirm-btn">ஆம், வாக்களி</button>
@@ -143,7 +246,7 @@
         </div>
     </div>
 
-    <!-- Toast Message -->
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
 
     <script src="script.js"></script>
