@@ -6,13 +6,16 @@ class VillageEVM {
         this.boothNumber = "TN-15-157-158";
         this.surveyorName = "குணமங்கலம் TVK";
         
+        // ✅ உங்க ஊர்ல மொத்த வாக்காளர்கள்
+        this.totalVoters = 1456; // Change this to your actual count
+        
         this.currentUser = null;
         this.isAdmin = false;
         this.otpTimer = null;
         this.otpExpiry = null;
         this.generatedOtp = null;
         
-        // Admin email - change this to your email
+        // Admin email
         this.adminEmail = "sanjaykumar.techdev@gmail.com";
         
         // Load saved settings
@@ -22,7 +25,7 @@ class VillageEVM {
         // Suggestions array
         this.suggestions = this.loadSuggestions();
         
-        // Parties array
+        // Parties array - CORRECT Tamil names
         this.parties = [
             { id: 1, name: "திராவிட முன்னேற்றக் கழகம்", short: "DMK", symbol: '<img src="images/dmk.png" alt="DMK" class="party-symbol-img">', alliance: "SECULAR", color: "#e31b23", votes: 0 },
             { id: 2, name: "அனைத்திந்திய அண்ணா திராவிட முன்னேற்றக் கழகம்", short: "AIADMK", symbol: '<img src="images/aiadmk.png" alt="AIADMK" class="party-symbol-img">', alliance: "NDA", color: "#00843D", votes: 0 },
@@ -46,7 +49,7 @@ class VillageEVM {
             { id: 21, name: "நோட்டா", short: "NOTA", symbol: '<img src="images/nota.png" alt="NOTA" class="party-symbol-img">', alliance: "Others", color: "#000000", votes: 0 }
         ];
         
-        this.voters = ["Raman", "Selvi", "Murugan", "Anjali", "Kumar", "Lakshmi", "Perumal", "Meena", "Sundar", "Vanitha"];
+        this.voters = []; // Not needed anymore
         this.totalVotes = 0;
         this.selectedParty = null;
         this.lastVoteTime = 0;
@@ -59,6 +62,116 @@ class VillageEVM {
         this.initLoginSystem();
         
         console.log("✅ VillageEVM initialized with", this.parties.length, "parties");
+        console.log("👥 Total voters in village:", this.totalVoters);
+    }
+
+    // ========== VOTE MANAGEMENT ==========
+    
+    loadVotes() {
+        try {
+            const key = `villageVotes_${this.villageName}`;
+            const saved = localStorage.getItem(key);
+            
+            console.log(`🔍 Loading votes from localStorage key: ${key}`);
+            
+            if (saved) {
+                const votes = JSON.parse(saved);
+                
+                // Update each party's votes
+                this.parties = this.parties.map(party => ({
+                    ...party,
+                    votes: votes[party.id] || 0
+                }));
+                
+                // Recalculate total votes
+                this.totalVotes = this.parties.reduce((sum, p) => sum + p.votes, 0);
+                console.log("✅ Total votes loaded:", this.totalVotes);
+                
+                this.updateVoteDisplay();
+            } else {
+                console.log("ℹ️ No saved votes found, starting fresh");
+                this.totalVotes = 0;
+            }
+        } catch (error) {
+            console.error("❌ Error in loadVotes:", error);
+        }
+    }
+    
+    saveVotes() {
+        try {
+            const key = `villageVotes_${this.villageName}`;
+            const votes = {};
+            
+            this.parties.forEach(party => {
+                votes[party.id] = party.votes;
+            });
+            
+            localStorage.setItem(key, JSON.stringify(votes));
+            this.updateVoteDisplay();
+            
+        } catch (error) {
+            console.error("❌ Error in saveVotes:", error);
+        }
+    }
+    
+    updateVoteDisplay() {
+        document.getElementById('totalVotes').textContent = this.totalVotes;
+        document.getElementById('totalVotesFooter').textContent = this.totalVotes;
+        document.getElementById('votersCount').textContent = this.totalVoters;
+        
+        this.renderParties();
+        this.renderResults();
+    }
+    
+    confirmVote() {
+        if (this.selectedParty) {
+            const now = Date.now();
+            if (now - this.lastVoteTime < this.voteDelay) {
+                this.remainingTime = Math.ceil((this.voteDelay - (now - this.lastVoteTime)) / 1000);
+                this.showToast(`⏳ ${this.remainingTime} வினாடிகள் காத்திருக்கவும்`, 'warning');
+                document.getElementById('confirmModal').style.display = 'none';
+                return;
+            }
+            
+            const partyShort = this.selectedParty.short;
+            
+            this.selectedParty.votes += 1;
+            this.totalVotes++;
+            this.lastVoteTime = now;
+            
+            this.saveVotes();
+            
+            this.renderParties();
+            this.renderResults();
+            
+            this.showToast(`✅ ${partyShort} - வாக்கு பதிவானது!`, 'success');
+            
+            document.getElementById('confirmModal').style.display = 'none';
+            this.selectedParty = null;
+            this.remainingTime = 2;
+        }
+    }
+    
+    resetVotes() {
+        if (!this.isAdmin) {
+            this.showToast('❌ இது நிர்வாகிகளுக்கு மட்டும்', 'error');
+            return;
+        }
+        
+        if (confirm('⚠️ நிச்சயமாக அனைத்து வாக்குகளையும் மீட்டமைக்க விரும்புகிறீர்களா?')) {
+            this.parties.forEach(party => party.votes = 0);
+            this.totalVotes = 0;
+            this.lastVoteTime = 0;
+            this.remainingTime = 0;
+            
+            this.saveVotes();
+            
+            this.renderParties();
+            this.renderResults();
+            
+            this.showToast('🔄 அனைத்து வாக்குகளும் மீட்டமைக்கப்பட்டன', 'success');
+            document.getElementById('timerDisplay').classList.add('hidden');
+        }
     }
 
     // ========== SUGGESTIONS SYSTEM ==========
@@ -186,7 +299,6 @@ class VillageEVM {
 
         sendOtpBtn.addEventListener('click', async () => {
             const email = emailInput.value.trim();
-            console.log("1️⃣ Email entered:", email);
 
             if (!email || !email.includes('@')) {
                 this.showToast('❌ சரியான மின்னஞ்சலை உள்ளிடவும்', 'warning');
@@ -198,7 +310,6 @@ class VillageEVM {
 
             this.generatedOtp = Math.floor(100000 + Math.random() * 900000).toString();
             this.otpExpiry = Date.now() + 5 * 60 * 1000;
-            console.log("2️⃣ Generated OTP:", this.generatedOtp);
 
             try {
                 const serviceId = "service_mk8juw2";
@@ -208,25 +319,15 @@ class VillageEVM {
                     to_email: email,
                     email: email,
                     to: email,
-                    recipient: email,
                     to_name: email.split('@')[0],
-                    name: email.split('@')[0],
-                    otp_code: this.generatedOtp,
-                    otp: this.generatedOtp,
-                    code: this.generatedOtp,
-                    from_name: 'Village EVM 2026',
-                    from: 'Village EVM 2026'
+                    otp_code: this.generatedOtp
                 };
                 
-                console.log("3️⃣ Sending with Params:", templateParams);
-
                 const response = await emailjs.send(
                     serviceId,
                     templateId,
                     templateParams
                 );
-
-                console.log("4️⃣ EmailJS Response:", response);
 
                 if (response && response.status === 200) {
                     otpGroup.classList.remove('hidden');
@@ -242,7 +343,6 @@ class VillageEVM {
                 console.error('❌ EmailJS Error:', error);
                 
                 // FALLBACK MODE
-                console.log("⚠️ FALLBACK MODE: Use this OTP ->", this.generatedOtp);
                 this.showToast(`📨 OTP: ${this.generatedOtp} (Check Console F12)`, 'info');
                 
                 otpGroup.classList.remove('hidden');
@@ -303,7 +403,6 @@ class VillageEVM {
                     }
                 });
                 
-                // Show vote and suggestions tabs, results only for admin
                 document.getElementById('tabResultsBtn').classList.toggle('hidden', !this.isAdmin);
 
                 this.showToast(`✅ வரவேற்கிறோம்${this.isAdmin ? ' நிர்வாகி' : ''}!`, 'success');
@@ -389,30 +488,9 @@ class VillageEVM {
         this.attachEvents();
     }
 
-    loadVotes() {
-        const saved = localStorage.getItem(`villageVotes_${this.villageName}`);
-        if (saved) {
-            const votes = JSON.parse(saved);
-            this.parties = this.parties.map(party => ({
-                ...party,
-                votes: votes[party.id] || 0
-            }));
-            this.totalVotes = this.parties.reduce((sum, p) => sum + p.votes, 0);
-        }
-    }
-
-    saveVotes() {
-        const votes = {};
-        this.parties.forEach(p => votes[p.id] = p.votes);
-        localStorage.setItem(`villageVotes_${this.villageName}`, JSON.stringify(votes));
-    }
-
     renderParties() {
         const grid = document.getElementById('partyGrid');
-        if (!grid) {
-            console.error("❌ partyGrid element not found!");
-            return;
-        }
+        if (!grid) return;
         
         const searchTerm = document.getElementById('searchInput')?.value.toLowerCase() || '';
         const allianceFilter = document.getElementById('allianceFilter')?.value || 'all';
@@ -447,7 +525,7 @@ class VillageEVM {
         `).join('');
         
         document.getElementById('totalVotes').textContent = this.totalVotes;
-        document.getElementById('votersCount').textContent = this.voters.length;
+        document.getElementById('votersCount').textContent = this.totalVoters;
         document.getElementById('totalVotesFooter').textContent = this.totalVotes;
     }
 
@@ -493,37 +571,6 @@ class VillageEVM {
         document.getElementById('confirmModal').style.display = 'flex';
     }
 
-    confirmVote() {
-        if (this.selectedParty) {
-            const now = Date.now();
-            if (now - this.lastVoteTime < this.voteDelay) {
-                this.remainingTime = Math.ceil((this.voteDelay - (now - this.lastVoteTime)) / 1000);
-                this.showToast(`⏳ ${this.remainingTime} வினாடிகள் காத்திருக்கவும்`, 'warning');
-                document.getElementById('confirmModal').style.display = 'none';
-                return;
-            }
-            
-            this.selectedParty.votes += 1;
-            this.totalVotes++;
-            this.lastVoteTime = now;
-            
-            this.saveVotes();
-            this.renderParties();
-            this.renderResults();
-            
-            this.showToast(`✅ ${this.selectedParty.short} - வாக்கு பதிவானது!`, 'success');
-            
-            document.getElementById('confirmModal').style.display = 'none';
-            this.selectedParty = null;
-            this.remainingTime = 2;
-        }
-    }
-
-    cancelVote() {
-        document.getElementById('confirmModal').style.display = 'none';
-        this.selectedParty = null;
-    }
-
     startTimer() {
         if (this.timerInterval) clearInterval(this.timerInterval);
         
@@ -548,25 +595,6 @@ class VillageEVM {
                 this.renderParties();
             }
         }, 100);
-    }
-
-    resetVotes() {
-        if (!this.isAdmin) {
-            this.showToast('❌ இது நிர்வாகிகளுக்கு மட்டும்', 'error');
-            return;
-        }
-        
-        if (confirm('⚠️ நிச்சயமாக அனைத்து வாக்குகளையும் மீட்டமைக்க விரும்புகிறீர்களா?')) {
-            this.parties.forEach(party => party.votes = 0);
-            this.totalVotes = 0;
-            this.lastVoteTime = 0;
-            this.remainingTime = 0;
-            this.saveVotes();
-            this.renderParties();
-            this.renderResults();
-            this.showToast('🔄 அனைத்து வாக்குகளும் மீட்டமைக்கப்பட்டன', 'success');
-            document.getElementById('timerDisplay').classList.add('hidden');
-        }
     }
 
     showToast(message, type = 'info') {
@@ -607,6 +635,11 @@ class VillageEVM {
         });
     }
 
+    cancelVote() {
+        document.getElementById('confirmModal').style.display = 'none';
+        this.selectedParty = null;
+    }
+
     // ========== ADMIN PANEL FUNCTIONS ==========
 
     showAdminDashboard() {
@@ -631,8 +664,8 @@ class VillageEVM {
                     <div class="admin-stat-card">
                         <div class="admin-stat-icon">👥</div>
                         <div class="admin-stat-info">
-                            <h3>வாக்காளர்கள்</h3>
-                            <p class="admin-stat-number">${this.voters.length}</p>
+                            <h3>மொத்த வாக்காளர்கள்</h3>
+                            <p class="admin-stat-number">${this.totalVoters}</p>
                         </div>
                     </div>
                     
@@ -648,7 +681,7 @@ class VillageEVM {
                         <div class="admin-stat-icon">🎯</div>
                         <div class="admin-stat-info">
                             <h3>வாக்கு %</h3>
-                            <p class="admin-stat-number">${this.voters.length ? ((this.totalVotes / this.voters.length) * 100).toFixed(1) : 0}%</p>
+                            <p class="admin-stat-number">${this.totalVoters ? ((this.totalVotes / this.totalVoters) * 100).toFixed(1) : 0}%</p>
                         </div>
                     </div>
                 </div>
@@ -731,7 +764,7 @@ class VillageEVM {
             suggestion.status = 'reviewed';
             this.saveSuggestions();
             this.renderSuggestions();
-            this.showAdminDashboard(); // Refresh admin panel
+            this.showAdminDashboard();
             this.showToast('✅ கோரிக்கை பரிசீலனையில்', 'success');
         }
     }
@@ -743,7 +776,7 @@ class VillageEVM {
             this.suggestions = this.suggestions.filter(s => s.id !== id);
             this.saveSuggestions();
             this.renderSuggestions();
-            this.showAdminDashboard(); // Refresh admin panel
+            this.showAdminDashboard();
             this.showToast('🗑️ கோரிக்கை நீக்கப்பட்டது', 'info');
         }
     }
@@ -761,8 +794,8 @@ class VillageEVM {
         });
         
         csv += `\nTotal Votes,${this.totalVotes}\n`;
-        csv += `Voters Count,${this.voters.length}\n`;
-        csv += `Turnout,${this.voters.length ? ((this.totalVotes / this.voters.length) * 100).toFixed(1) : 0}%\n`;
+        csv += `Total Voters,${this.totalVoters}\n`;
+        csv += `Turnout,${this.totalVoters ? ((this.totalVotes / this.totalVoters) * 100).toFixed(1) : 0}%\n`;
         
         const blob = new Blob([csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -796,6 +829,7 @@ class VillageEVM {
                 <p>தேதி: ${new Date().toLocaleDateString('ta-IN')}</p>
                 <p>கிராமம்: ${this.villageName}</p>
                 <p>வாக்குச்சாவடி: ${this.boothNumber}</p>
+                <p>மொத்த வாக்காளர்கள்: ${this.totalVoters}</p>
                 
                 <table>
                     <tr>
@@ -818,8 +852,8 @@ class VillageEVM {
                 
                 <div class="total">
                     <p>மொத்த வாக்குகள்: ${this.totalVotes}</p>
-                    <p>மொத்த வாக்காளர்கள்: ${this.voters.length}</p>
-                    <p>வாக்கு சதவீதம்: ${this.voters.length ? ((this.totalVotes / this.voters.length) * 100).toFixed(1) : 0}%</p>
+                    <p>மொத்த வாக்காளர்கள்: ${this.totalVoters}</p>
+                    <p>வாக்கு சதவீதம்: ${this.totalVoters ? ((this.totalVotes / this.totalVoters) * 100).toFixed(1) : 0}%</p>
                 </div>
             </body>
             </html>

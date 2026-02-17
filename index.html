@@ -75,8 +75,8 @@
                             <div class="stat-number" id="totalVotes">0</div>
                         </div>
                         <div class="stat-item">
-                            <div class="stat-label">பதிவு செய்தவர்கள்</div>
-                            <div class="stat-number" id="votersCount">10</div>
+                            <div class="stat-label">மொத்த வாக்காளர்கள்</div>
+                            <div class="stat-number" id="votersCount">1456</div>
                         </div>
                     </div>
                     <button class="logout-btn" onclick="villageEVM.logout()">
@@ -122,7 +122,7 @@
                 </button>
             </div>
 
-            <!-- VOTE TAB (Visible to all) -->
+            <!-- VOTE TAB -->
             <div id="voteTab" class="tab-content active">
                 <div class="survey-panel">
                     <div class="survey-header">
@@ -154,14 +154,13 @@
                 </div>
             </div>
 
-            <!-- SUGGESTIONS TAB (Visible to all) -->
+            <!-- SUGGESTIONS TAB -->
             <div id="suggestionsTab" class="tab-content hidden">
                 <div class="survey-panel">
                     <div class="survey-header">
                         <h2><span>💡</span> மக்களின் கோரிக்கைகள்</h2>
                     </div>
 
-                    <!-- Add Suggestion Form -->
                     <div class="suggestion-form">
                         <h3>📝 புதிய கோரிக்கை</h3>
                         <input type="text" id="suggestionTitle" class="search-input" placeholder="தலைப்பு (எ.கா: புதிய சாலை)" maxlength="100">
@@ -172,17 +171,14 @@
                         </button>
                     </div>
 
-                    <!-- Suggestions List -->
                     <div class="suggestions-list">
                         <h3>📋 அண்மைய கோரிக்கைகள்</h3>
-                        <div id="suggestionsContainer" class="suggestions-container">
-                            <!-- Suggestions will be loaded here -->
-                        </div>
+                        <div id="suggestionsContainer" class="suggestions-container"></div>
                     </div>
                 </div>
             </div>
 
-            <!-- RESULTS TAB (ADMIN ONLY) -->
+            <!-- RESULTS TAB -->
             <div id="resultsTab" class="tab-content hidden">
                 <div class="results-section">
                     <div class="results-header">
@@ -223,9 +219,7 @@
                 <h2>⚙️ நிர்வாக கட்டுப்பாட்டு பலகம்</h2>
                 <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'">&times;</button>
             </div>
-            <div id="adminModalBody" class="modal-body">
-                <!-- Admin content will be loaded here -->
-            </div>
+            <div id="adminModalBody" class="modal-body"></div>
         </div>
     </div>
 
