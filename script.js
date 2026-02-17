@@ -6,8 +6,8 @@ class VillageEVM {
         this.boothNumber = "TN-15-157-158";
         this.surveyorName = "குணமங்கலம் TVK";
         
-        // ✅ உங்க ஊர்ல மொத்த வாக்காளர்கள்
-        this.totalVoters = 1456; // Change this to your actual count
+        // Total voters
+        this.totalVoters = 1462;
         
         this.currentUser = null;
         this.isAdmin = false;
@@ -22,10 +22,13 @@ class VillageEVM {
         this.voteDelay = parseInt(localStorage.getItem('evm_vote_delay')) || 2000;
         this.adminEmail = localStorage.getItem('evm_admin_email') || this.adminEmail;
         
+        // Chart instance
+        this.chart = null;
+        
         // Suggestions array
         this.suggestions = this.loadSuggestions();
         
-        // Parties array - CORRECT Tamil names
+        // Parties array
         this.parties = [
             { id: 1, name: "திராவிட முன்னேற்றக் கழகம்", short: "DMK", symbol: '<img src="images/dmk.png" alt="DMK" class="party-symbol-img">', alliance: "SECULAR", color: "#e31b23", votes: 0 },
             { id: 2, name: "அனைத்திந்திய அண்ணா திராவிட முன்னேற்றக் கழகம்", short: "AIADMK", symbol: '<img src="images/aiadmk.png" alt="AIADMK" class="party-symbol-img">', alliance: "NDA", color: "#00843D", votes: 0 },
@@ -49,12 +52,15 @@ class VillageEVM {
             { id: 21, name: "நோட்டா", short: "NOTA", symbol: '<img src="images/nota.png" alt="NOTA" class="party-symbol-img">', alliance: "Others", color: "#000000", votes: 0 }
         ];
         
-        this.voters = []; // Not needed anymore
+        this.voters = [];
         this.totalVotes = 0;
         this.selectedParty = null;
         this.lastVoteTime = 0;
         this.remainingTime = 0;
         this.timerInterval = null;
+        
+        // Load dark mode preference
+        this.loadDarkMode();
         
         // Initialize
         this.checkSession();
@@ -65,32 +71,34 @@ class VillageEVM {
         console.log("👥 Total voters in village:", this.totalVoters);
     }
 
+    // ========== DARK MODE ==========
+    toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('evm_dark_mode', isDark ? 'dark' : 'light');
+    }
+
+    loadDarkMode() {
+        const saved = localStorage.getItem('evm_dark_mode');
+        if (saved === 'dark') {
+            document.body.classList.add('dark-mode');
+        }
+    }
+
     // ========== VOTE MANAGEMENT ==========
-    
     loadVotes() {
         try {
             const key = `villageVotes_${this.villageName}`;
             const saved = localStorage.getItem(key);
             
-            console.log(`🔍 Loading votes from localStorage key: ${key}`);
-            
             if (saved) {
                 const votes = JSON.parse(saved);
-                
-                // Update each party's votes
                 this.parties = this.parties.map(party => ({
                     ...party,
                     votes: votes[party.id] || 0
                 }));
-                
-                // Recalculate total votes
                 this.totalVotes = this.parties.reduce((sum, p) => sum + p.votes, 0);
-                console.log("✅ Total votes loaded:", this.totalVotes);
-                
                 this.updateVoteDisplay();
-            } else {
-                console.log("ℹ️ No saved votes found, starting fresh");
-                this.totalVotes = 0;
             }
         } catch (error) {
             console.error("❌ Error in loadVotes:", error);
@@ -101,14 +109,11 @@ class VillageEVM {
         try {
             const key = `villageVotes_${this.villageName}`;
             const votes = {};
-            
             this.parties.forEach(party => {
                 votes[party.id] = party.votes;
             });
-            
             localStorage.setItem(key, JSON.stringify(votes));
             this.updateVoteDisplay();
-            
         } catch (error) {
             console.error("❌ Error in saveVotes:", error);
         }
@@ -118,9 +123,11 @@ class VillageEVM {
         document.getElementById('totalVotes').textContent = this.totalVotes;
         document.getElementById('totalVotesFooter').textContent = this.totalVotes;
         document.getElementById('votersCount').textContent = this.totalVoters;
-        
         this.renderParties();
         this.renderResults();
+        if (document.getElementById('chartsTab').classList.contains('active') === false) {
+            this.updateChart();
+        }
     }
     
     confirmVote() {
@@ -134,17 +141,24 @@ class VillageEVM {
             }
             
             const partyShort = this.selectedParty.short;
+            const partyId = this.selectedParty.id;
             
             this.selectedParty.votes += 1;
             this.totalVotes++;
             this.lastVoteTime = now;
             
             this.saveVotes();
-            
             this.renderParties();
             this.renderResults();
+            this.updateChart();
             
             this.showToast(`✅ ${partyShort} - வாக்கு பதிவானது!`, 'success');
+            
+            // Winner animation
+            const sorted = [...this.parties].sort((a, b) => b.votes - a.votes);
+            if (sorted[0].id === partyId && this.totalVotes > 0) {
+                this.playWinnerAnimation(partyShort);
+            }
             
             document.getElementById('confirmModal').style.display = 'none';
             this.selectedParty = null;
@@ -163,19 +177,240 @@ class VillageEVM {
             this.totalVotes = 0;
             this.lastVoteTime = 0;
             this.remainingTime = 0;
-            
             this.saveVotes();
-            
             this.renderParties();
             this.renderResults();
-            
+            this.updateChart();
             this.showToast('🔄 அனைத்து வாக்குகளும் மீட்டமைக்கப்பட்டன', 'success');
             document.getElementById('timerDisplay').classList.add('hidden');
         }
     }
 
+    // ========== WHATSAPP SHARE ==========
+    shareResultsWhatsApp() {
+        const sortedParties = [...this.parties].sort((a, b) => b.votes - a.votes);
+        const topParties = sortedParties.slice(0, 5);
+        
+        let message = `*🏡 கிராம வாக்குப்பதிவு 2026 - முடிவுகள்*\n`;
+        message += `📍 *கிராமம்:* ${this.villageName}\n`;
+        message += `🗳️ *மொத்த வாக்குகள்:* ${this.totalVotes}\n`;
+        message += `👥 *மொத்த வாக்காளர்கள்:* ${this.totalVoters}\n`;
+        message += `📊 *வாக்கு சதவீதம்:* ${this.totalVoters ? ((this.totalVotes / this.totalVoters) * 100).toFixed(1) : 0}%\n\n`;
+        message += `*🏆 முன்னணி கட்சிகள்:*\n`;
+        
+        topParties.forEach((party, index) => {
+            const percentage = this.totalVotes > 0 ? ((party.votes / this.totalVotes) * 100).toFixed(1) : 0;
+            message += `${index+1}. ${party.short} - ${party.votes} வாக்குகள் (${percentage}%)\n`;
+        });
+        
+        message += `\n🔗 ${window.location.href}`;
+        
+        const encoded = encodeURIComponent(message);
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
+
+    shareSuggestionsWhatsApp() {
+        if (this.suggestions.length === 0) {
+            this.showToast('📭 கோரிக்கைகள் இல்லை', 'warning');
+            return;
+        }
+        
+        let message = `*💡 கிராம வாக்குப்பதிவு 2026 - கோரிக்கைகள்*\n`;
+        message += `📍 *கிராமம்:* ${this.villageName}\n`;
+        message += `📋 *மொத்த கோரிக்கைகள்:* ${this.suggestions.length}\n\n`;
+        
+        this.suggestions.slice(0, 5).forEach((s, i) => {
+            message += `${i+1}. *${s.title}*\n`;
+            message += `   ${s.description.substring(0, 50)}...\n`;
+            message += `   ✍️ ${s.author} | ${s.date}\n\n`;
+        });
+        
+        message += `🔗 ${window.location.href}`;
+        
+        const encoded = encodeURIComponent(message);
+        window.open(`https://wa.me/?text=${encoded}`, '_blank');
+    }
+
+    // ========== PRINT FUNCTIONS ==========
+    printResults() {
+        const printWindow = window.open('', '_blank');
+        
+        const sortedParties = [...this.parties].sort((a, b) => b.votes - a.votes);
+        
+        let tableRows = '';
+        sortedParties.forEach((party, index) => {
+            const percentage = this.totalVotes > 0 ? ((party.votes / this.totalVotes) * 100).toFixed(1) : 0;
+            tableRows += `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${party.short}</td>
+                    <td>${party.name}</td>
+                    <td>${party.votes}</td>
+                    <td>${percentage}%</td>
+                </tr>
+            `;
+        });
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Village EVM Results - ${this.villageName}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; }
+                    h1 { color: #000; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th { background: #000; color: white; padding: 12px; text-align: left; }
+                    td { padding: 10px; border-bottom: 1px solid #ddd; }
+                    .total { margin-top: 20px; font-weight: bold; }
+                    .footer { margin-top: 30px; font-size: 12px; color: #666; text-align: center; }
+                </style>
+            </head>
+            <body>
+                <h1>🏡 கிராம வாக்குப்பதிவு 2026 - முடிவுகள்</h1>
+                <p><strong>கிராமம்:</strong> ${this.villageName}</p>
+                <p><strong>வாக்குச்சாவடி:</strong> ${this.boothNumber}</p>
+                <p><strong>தேதி:</strong> ${new Date().toLocaleDateString('ta-IN')}</p>
+                
+                <table>
+                    <tr>
+                        <th>தரம்</th>
+                        <th>கட்சி</th>
+                        <th>முழு பெயர்</th>
+                        <th>வாக்குகள்</th>
+                        <th>சதவீதம்</th>
+                    </tr>
+                    ${tableRows}
+                </table>
+                
+                <div class="total">
+                    <p><strong>மொத்த வாக்குகள்:</strong> ${this.totalVotes}</p>
+                    <p><strong>மொத்த வாக்காளர்கள்:</strong> ${this.totalVoters}</p>
+                    <p><strong>வாக்கு சதவீதம்:</strong> ${this.totalVoters ? ((this.totalVotes / this.totalVoters) * 100).toFixed(1) : 0}%</p>
+                </div>
+                
+                <div class="footer">
+                    <p>உருவாக்கப்பட்டது: ${new Date().toLocaleString('ta-IN')}</p>
+                </div>
+            </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    printVotersList() {
+        if (!this.isAdmin) {
+            this.showToast('❌ நிர்வாகிகள் மட்டும்', 'error');
+            return;
+        }
+        
+        const printWindow = window.open('', '_blank');
+        
+        let votersHtml = '';
+        for (let i = 1; i <= this.totalVoters; i++) {
+            votersHtml += `
+                <tr>
+                    <td>${i}</td>
+                    <td>வாக்காளர்_${i}</td>
+                    <td>${Math.floor(Math.random() * 100) + 1}</td>
+                    <td>${i <= this.totalVotes ? '✅ வாக்களித்தார்' : '⏳ வாக்களிக்கவில்லை'}</td>
+                </tr>
+            `;
+        }
+        
+        printWindow.document.write(`
+            <html>
+            <head>
+                <title>Voter List - ${this.villageName}</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 30px; }
+                    h1 { color: #000; border-bottom: 2px solid #000; padding-bottom: 10px; }
+                    table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+                    th { background: #000; color: white; padding: 12px; text-align: left; }
+                    td { padding: 10px; border-bottom: 1px solid #ddd; }
+                    .stats { margin: 20px 0; padding: 15px; background: #f5f5f5; }
+                </style>
+            </head>
+            <body>
+                <h1>👥 ${this.villageName} - வாக்காளர்கள் பட்டியல்</h1>
+                
+                <div class="stats">
+                    <p><strong>மொத்த வாக்காளர்கள்:</strong> ${this.totalVoters}</p>
+                    <p><strong>பதிவான வாக்குகள்:</strong> ${this.totalVotes}</p>
+                    <p><strong>மீதமுள்ள வாக்காளர்கள்:</strong> ${this.totalVoters - this.totalVotes}</p>
+                </div>
+                
+                <table>
+                    <tr>
+                        <th>வ.எண்</th>
+                        <th>வாக்காளர் பெயர்</th>
+                        <th>வீட்டு எண்</th>
+                        <th>நிலை</th>
+                    </tr>
+                    ${votersHtml}
+                </table>
+            </body>
+            </html>
+        `);
+        
+        printWindow.document.close();
+        printWindow.print();
+    }
+
+    // ========== WINNER ANIMATION ==========
+    playWinnerAnimation(winnerParty) {
+        const canvas = document.getElementById('winnerCanvas');
+        canvas.style.display = 'block';
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const ctx = canvas.getContext('2d');
+        const particles = [];
+        
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                size: Math.random() * 10 + 5,
+                color: `hsl(${Math.random() * 360}, 70%, 50%)`
+            });
+        }
+        
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                
+                if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 48px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`🏆 ${winnerParty} 🏆`, canvas.width/2, canvas.height/2);
+            
+            requestAnimationFrame(animate);
+        }
+        
+        animate();
+        
+        setTimeout(() => {
+            canvas.style.display = 'none';
+        }, 5000);
+    }
+
     // ========== SUGGESTIONS SYSTEM ==========
-    
     loadSuggestions() {
         const saved = localStorage.getItem('village_suggestions');
         return saved ? JSON.parse(saved) : [];
@@ -247,7 +482,7 @@ class VillageEVM {
         return div.innerHTML;
     }
 
-    // ========== LOGOUT METHOD ==========
+    // ========== LOGOUT ==========
     logout() {
         console.log("🚪 Logging out...");
         localStorage.removeItem('evm_session');
@@ -276,17 +511,130 @@ class VillageEVM {
         document.getElementById('voteTab').classList.add('hidden');
         document.getElementById('suggestionsTab').classList.add('hidden');
         document.getElementById('resultsTab').classList.add('hidden');
+        document.getElementById('votersTab').classList.add('hidden');
+        document.getElementById('chartsTab').classList.add('hidden');
         
         document.getElementById('tabVoteBtn').classList.remove('active');
         document.getElementById('tabSuggestBtn').classList.remove('active');
         document.getElementById('tabResultsBtn').classList.remove('active');
+        document.getElementById('tabVotersBtn').classList.remove('active');
+        document.getElementById('tabChartsBtn').classList.remove('active');
         
         document.getElementById(tabName + 'Tab').classList.remove('hidden');
         document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1) + 'Btn').classList.add('active');
         
         if (tabName === 'suggestions') {
             this.renderSuggestions();
+        } else if (tabName === 'voters') {
+            this.renderVotersList();
+        } else if (tabName === 'charts') {
+            this.updateChart();
         }
+    }
+
+    // ========== VOTERS LIST ==========
+    renderVotersList() {
+        const tbody = document.getElementById('votersBody');
+        if (!tbody) return;
+        
+        const searchTerm = document.getElementById('voterSearch')?.value.toLowerCase() || '';
+        
+        let html = '';
+        for (let i = 1; i <= this.totalVoters; i++) {
+            const voterName = `வாக்காளர்_${i}`;
+            const houseNo = Math.floor(Math.random() * 100) + 1;
+            const hasVoted = i <= this.totalVotes;
+            
+            if (searchTerm && !voterName.toLowerCase().includes(searchTerm)) {
+                continue;
+            }
+            
+            html += `
+                <tr>
+                    <td>${i}</td>
+                    <td>${voterName}</td>
+                    <td>${houseNo}</td>
+                    <td>
+                        <span class="voter-status ${hasVoted ? 'voted' : 'not-voted'}">
+                            ${hasVoted ? '✅ வாக்களித்தார்' : '⏳ வாக்களிக்கவில்லை'}
+                        </span>
+                    </td>
+                </tr>
+            `;
+        }
+        
+        tbody.innerHTML = html || '<tr><td colspan="4" class="text-center">😕 வாக்காளர்கள் இல்லை</td></tr>';
+        
+        document.getElementById('voterSearch').addEventListener('input', () => this.renderVotersList());
+    }
+
+    // ========== CHARTS ==========
+    updateChart() {
+        const canvas = document.getElementById('voteChart');
+        if (!canvas) return;
+        
+        if (this.chart) {
+            this.chart.destroy();
+        }
+        
+        const ctx = canvas.getContext('2d');
+        
+        const sortedParties = [...this.parties].sort((a, b) => b.votes - a.votes);
+        const topParties = sortedParties.filter(p => p.votes > 0).slice(0, 8);
+        
+        if (topParties.length === 0) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#666';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('📊 இதுவரை வாக்குகள் இல்லை', canvas.width/2, canvas.height/2);
+            document.getElementById('chartLegend').innerHTML = '';
+            return;
+        }
+        
+        this.chart = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: topParties.map(p => p.short),
+                datasets: [{
+                    data: topParties.map(p => p.votes),
+                    backgroundColor: topParties.map(p => p.color),
+                    borderColor: 'white',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.raw || 0;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ${value} votes (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        const legend = document.getElementById('chartLegend');
+        legend.innerHTML = topParties.map(p => {
+            const percentage = this.totalVotes > 0 ? ((p.votes / this.totalVotes) * 100).toFixed(1) : 0;
+            return `
+                <div class="legend-item">
+                    <div class="legend-color" style="background: ${p.color};"></div>
+                    <span><strong>${p.short}</strong> - ${p.votes} (${percentage}%)</span>
+                </div>
+            `;
+        }).join('');
     }
 
     // ========== LOGIN SYSTEM ==========
@@ -341,10 +689,7 @@ class VillageEVM {
 
             } catch (error) {
                 console.error('❌ EmailJS Error:', error);
-                
-                // FALLBACK MODE
                 this.showToast(`📨 OTP: ${this.generatedOtp} (Check Console F12)`, 'info');
-                
                 otpGroup.classList.remove('hidden');
                 sendOtpBtn.classList.add('hidden');
                 loginWithOtpBtn.classList.remove('hidden');
@@ -374,10 +719,8 @@ class VillageEVM {
                 const email = emailInput.value.trim();
                 this.currentUser = { email: email, loginTime: Date.now() };
                 
-                // Check if admin (case insensitive)
                 this.isAdmin = (email.toLowerCase() === this.adminEmail.toLowerCase());
                 
-                // Save session
                 localStorage.setItem('evm_session', JSON.stringify({
                     email: email,
                     isAdmin: this.isAdmin,
@@ -389,12 +732,10 @@ class VillageEVM {
                 document.getElementById('userEmailDisplay').classList.remove('hidden');
                 document.getElementById('userEmail').textContent = email;
                 
-                // Show role badge
                 const roleBadge = document.getElementById('userRoleBadge');
                 roleBadge.textContent = this.isAdmin ? '🔰 நிர்வாகி' : '👤 வாக்காளர்';
                 roleBadge.className = 'role-badge ' + (this.isAdmin ? 'admin' : 'user');
                 
-                // Show/hide admin-only elements
                 document.querySelectorAll('.admin-only').forEach(el => {
                     if (this.isAdmin) {
                         el.classList.remove('hidden');
@@ -404,6 +745,9 @@ class VillageEVM {
                 });
                 
                 document.getElementById('tabResultsBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabVotersBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabChartsBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabAdminBtn').classList.toggle('hidden', !this.isAdmin);
 
                 this.showToast(`✅ வரவேற்கிறோம்${this.isAdmin ? ' நிர்வாகி' : ''}!`, 'success');
                 this.init();
@@ -465,6 +809,9 @@ class VillageEVM {
                 });
                 
                 document.getElementById('tabResultsBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabVotersBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabChartsBtn').classList.toggle('hidden', !this.isAdmin);
+                document.getElementById('tabAdminBtn').classList.toggle('hidden', !this.isAdmin);
                 
                 this.init();
             } else {
@@ -525,7 +872,6 @@ class VillageEVM {
         `).join('');
         
         document.getElementById('totalVotes').textContent = this.totalVotes;
-        document.getElementById('votersCount').textContent = this.totalVoters;
         document.getElementById('totalVotesFooter').textContent = this.totalVotes;
     }
 
@@ -569,6 +915,11 @@ class VillageEVM {
         document.getElementById('modalPartyName').innerHTML = this.selectedParty.short;
         document.getElementById('modalPartyTamil').innerHTML = this.selectedParty.name;
         document.getElementById('confirmModal').style.display = 'flex';
+    }
+
+    cancelVote() {
+        document.getElementById('confirmModal').style.display = 'none';
+        this.selectedParty = null;
     }
 
     startTimer() {
@@ -635,13 +986,7 @@ class VillageEVM {
         });
     }
 
-    cancelVote() {
-        document.getElementById('confirmModal').style.display = 'none';
-        this.selectedParty = null;
-    }
-
     // ========== ADMIN PANEL FUNCTIONS ==========
-
     showAdminDashboard() {
         if (!this.isAdmin) {
             this.showToast('❌ நிர்வாகிகள் மட்டும்', 'error');

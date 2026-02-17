@@ -9,6 +9,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>🏡 கிராம வாக்குப்பதிவு - Tamil Nadu Village EVM</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Chart.js for Charts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <!-- EmailJS SDK -->
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
     <script>
@@ -18,6 +20,14 @@
     </script>
 </head>
 <body>
+    <!-- Dark Mode Toggle -->
+    <div class="theme-toggle">
+        <button id="darkModeToggle" class="theme-btn" onclick="villageEVM.toggleDarkMode()">
+            <span class="light-icon">☀️</span>
+            <span class="dark-icon">🌙</span>
+        </button>
+    </div>
+
     <!-- Login Screen -->
     <div id="loginScreen" class="login-screen">
         <div class="login-card">
@@ -59,7 +69,7 @@
     <!-- Main App -->
     <div id="mainApp" class="main-app hidden">
         <div class="container">
-            <!-- Header with Logout Button -->
+            <!-- Header with Actions -->
             <div class="village-header">
                 <div class="village-info">
                     <div class="village-icon">🏡</div>
@@ -117,6 +127,12 @@
                 <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('results')" id="tabResultsBtn">
                     <span>📊</span> முடிவுகள்
                 </button>
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('voters')" id="tabVotersBtn">
+                    <span>👥</span> வாக்காளர்கள்
+                </button>
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('charts')" id="tabChartsBtn">
+                    <span>📈</span> விளக்கப்படம்
+                </button>
                 <button class="tab-btn admin-only hidden" onclick="villageEVM.showAdminDashboard()" id="tabAdminBtn">
                     <span>⚙️</span> நிர்வாகம்
                 </button>
@@ -159,6 +175,11 @@
                 <div class="survey-panel">
                     <div class="survey-header">
                         <h2><span>💡</span> மக்களின் கோரிக்கைகள்</h2>
+                        <div class="share-actions">
+                            <button class="share-btn" onclick="villageEVM.shareSuggestionsWhatsApp()">
+                                <span>📱</span> WhatsApp
+                            </button>
+                        </div>
                     </div>
 
                     <div class="suggestion-form">
@@ -183,9 +204,17 @@
                 <div class="results-section">
                     <div class="results-header">
                         <h3><span>📊</span> நேரடி முடிவுகள் - குணமங்கலம்</h3>
-                        <button class="reset-btn admin-only" onclick="villageEVM.resetVotes()">
-                            <span>🔄</span> மீட்டமை
-                        </button>
+                        <div class="result-actions">
+                            <button class="action-btn" onclick="villageEVM.printResults()">
+                                <span>🖨️</span> அச்சிடு
+                            </button>
+                            <button class="action-btn" onclick="villageEVM.shareResultsWhatsApp()">
+                                <span>📱</span> WhatsApp
+                            </button>
+                            <button class="reset-btn admin-only" onclick="villageEVM.resetVotes()">
+                                <span>🔄</span> மீட்டமை
+                            </button>
+                        </div>
                     </div>
 
                     <div class="table-container">
@@ -207,6 +236,53 @@
                     <div class="total-votes-footer">
                         <span class="total-votes-text">மொத்த வாக்குகள்: <span id="totalVotesFooter">0</span></span>
                     </div>
+                </div>
+            </div>
+
+            <!-- VOTERS TAB -->
+            <div id="votersTab" class="tab-content hidden">
+                <div class="results-section">
+                    <div class="results-header">
+                        <h3><span>👥</span> வாக்காளர்கள் பட்டியல்</h3>
+                        <div class="result-actions">
+                            <button class="action-btn" onclick="villageEVM.printVotersList()">
+                                <span>🖨️</span> அச்சிடு
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="search-box">
+                        <input type="text" id="voterSearch" class="search-input" placeholder="🔍 வாக்காளர் பெயர் தேடுக...">
+                    </div>
+
+                    <div class="table-container">
+                        <table class="results-table" id="votersTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>பெயர்</th>
+                                    <th>வீட்டு எண்</th>
+                                    <th>நிலை</th>
+                                </tr>
+                            </thead>
+                            <tbody id="votersBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CHARTS TAB -->
+            <div id="chartsTab" class="tab-content hidden">
+                <div class="results-section">
+                    <div class="results-header">
+                        <h3><span>📈</span> வாக்கு பகிர்வு விளக்கப்படம்</h3>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="voteChart"></canvas>
+                    </div>
+                    
+                    <div class="chart-legend" id="chartLegend"></div>
                 </div>
             </div>
         </div>
@@ -239,6 +315,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Winner Animation Canvas -->
+    <canvas id="winnerCanvas" style="display: none;"></canvas>
 
     <!-- Toast -->
     <div id="toast" class="toast"></div>
