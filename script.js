@@ -71,11 +71,56 @@ class VillageEVM {
         console.log("👥 Total voters in village:", this.totalVoters);
     }
 
+    // ========== SOUND FUNCTIONS - FIXED ==========
+    playClickSound() {
+        try {
+            const clickSound = document.getElementById('clickSound');
+            if (clickSound) {
+                clickSound.currentTime = 0;
+                clickSound.volume = 0.5;
+                clickSound.play().catch(e => {
+                    console.log("Click sound play failed - browser may need user interaction first");
+                });
+            }
+        } catch (e) {
+            console.log("Sound error:", e);
+        }
+    }
+
+    playWinnerSound() {
+        try {
+            // Play cracker sound for winner celebration
+            const crackerSound = document.getElementById('crackerSound');
+            if (crackerSound) {
+                crackerSound.currentTime = 0;
+                crackerSound.volume = 0.6;
+                crackerSound.play().catch(e => console.log("Cracker sound play failed:", e));
+            }
+            
+            // Also play winner sound after cracker
+            setTimeout(() => {
+                const winnerSound = document.getElementById('winnerSound');
+                if (winnerSound) {
+                    winnerSound.currentTime = 0;
+                    winnerSound.volume = 0.5;
+                    winnerSound.play().catch(e => console.log("Winner sound play failed:", e));
+                }
+            }, 500);
+        } catch (e) {
+            console.log("Winner sound error:", e);
+        }
+    }
+
     // ========== DARK MODE ==========
     toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('evm_dark_mode', isDark ? 'dark' : 'light');
+        
+        // Force update chart colors
+        if (this.chart) {
+            this.updateChart();
+        }
     }
 
     loadDarkMode() {
@@ -131,6 +176,8 @@ class VillageEVM {
     }
     
     confirmVote() {
+        this.playClickSound();
+        
         if (this.selectedParty) {
             const now = Date.now();
             if (now - this.lastVoteTime < this.voteDelay) {
@@ -154,10 +201,11 @@ class VillageEVM {
             
             this.showToast(`✅ ${partyShort} - வாக்கு பதிவானது!`, 'success');
             
-            // Winner animation
+            // Winner animation with sounds
             const sorted = [...this.parties].sort((a, b) => b.votes - a.votes);
             if (sorted[0].id === partyId && this.totalVotes > 0) {
                 this.playWinnerAnimation(partyShort);
+                this.playWinnerSound();
             }
             
             document.getElementById('confirmModal').style.display = 'none';
@@ -167,6 +215,8 @@ class VillageEVM {
     }
     
     resetVotes() {
+        this.playClickSound();
+        
         if (!this.isAdmin) {
             this.showToast('❌ இது நிர்வாகிகளுக்கு மட்டும்', 'error');
             return;
@@ -188,6 +238,8 @@ class VillageEVM {
 
     // ========== WHATSAPP SHARE ==========
     shareResultsWhatsApp() {
+        this.playClickSound();
+        
         const sortedParties = [...this.parties].sort((a, b) => b.votes - a.votes);
         const topParties = sortedParties.slice(0, 5);
         
@@ -210,6 +262,8 @@ class VillageEVM {
     }
 
     shareSuggestionsWhatsApp() {
+        this.playClickSound();
+        
         if (this.suggestions.length === 0) {
             this.showToast('📭 கோரிக்கைகள் இல்லை', 'warning');
             return;
@@ -233,6 +287,8 @@ class VillageEVM {
 
     // ========== PRINT FUNCTIONS ==========
     printResults() {
+        this.playClickSound();
+        
         const printWindow = window.open('', '_blank');
         
         const sortedParties = [...this.parties].sort((a, b) => b.votes - a.votes);
@@ -300,6 +356,8 @@ class VillageEVM {
     }
 
     printVotersList() {
+        this.playClickSound();
+        
         if (!this.isAdmin) {
             this.showToast('❌ நிர்வாகிகள் மட்டும்', 'error');
             return;
@@ -421,6 +479,8 @@ class VillageEVM {
     }
     
     addSuggestion() {
+        this.playClickSound();
+        
         const title = document.getElementById('suggestionTitle').value.trim();
         const desc = document.getElementById('suggestionDesc').value.trim();
         const name = document.getElementById('suggesterName').value.trim();
@@ -484,6 +544,7 @@ class VillageEVM {
 
     // ========== LOGOUT ==========
     logout() {
+        this.playClickSound();
         console.log("🚪 Logging out...");
         localStorage.removeItem('evm_session');
         this.currentUser = null;
@@ -508,6 +569,8 @@ class VillageEVM {
 
     // ========== TAB SWITCHING ==========
     switchTab(tabName) {
+        this.playClickSound();
+        
         document.getElementById('voteTab').classList.add('hidden');
         document.getElementById('suggestionsTab').classList.add('hidden');
         document.getElementById('resultsTab').classList.add('hidden');
@@ -584,7 +647,7 @@ class VillageEVM {
         
         if (topParties.length === 0) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#666';
+            ctx.fillStyle = document.body.classList.contains('dark-mode') ? '#ffffff' : '#666';
             ctx.font = '16px Arial';
             ctx.textAlign = 'center';
             ctx.fillText('📊 இதுவரை வாக்குகள் இல்லை', canvas.width/2, canvas.height/2);
@@ -599,7 +662,7 @@ class VillageEVM {
                 datasets: [{
                     data: topParties.map(p => p.votes),
                     backgroundColor: topParties.map(p => p.color),
-                    borderColor: 'white',
+                    borderColor: document.body.classList.contains('dark-mode') ? '#333' : 'white',
                     borderWidth: 2
                 }]
             },
@@ -646,6 +709,8 @@ class VillageEVM {
         const otpInput = document.getElementById('otpInput');
 
         sendOtpBtn.addEventListener('click', async () => {
+            this.playClickSound();
+            
             const email = emailInput.value.trim();
 
             if (!email || !email.includes('@')) {
@@ -702,6 +767,8 @@ class VillageEVM {
         });
 
         loginWithOtpBtn.addEventListener('click', () => {
+            this.playClickSound();
+            
             const enteredOtp = otpInput.value.trim();
 
             if (!enteredOtp) {
@@ -861,7 +928,7 @@ class VillageEVM {
         }
         
         grid.innerHTML = filteredParties.map(party => `
-            <button class="party-btn" onclick="villageEVM.selectParty(${party.id})"
+            <button class="party-btn" onclick="villageEVM.selectParty(${party.id}); villageEVM.playClickSound()"
                     ${this.remainingTime > 0 ? 'disabled' : ''}>
                 <div class="party-symbol">${party.symbol}</div>
                 <div class="party-short">${party.short}</div>
@@ -873,6 +940,7 @@ class VillageEVM {
         
         document.getElementById('totalVotes').textContent = this.totalVotes;
         document.getElementById('totalVotesFooter').textContent = this.totalVotes;
+        document.getElementById('votersCount').textContent = this.totalVoters;
     }
 
     renderResults() {
@@ -903,6 +971,8 @@ class VillageEVM {
     }
 
     selectParty(partyId) {
+        this.playClickSound();
+        
         if (this.remainingTime > 0) {
             this.showToast(`⏳ ${this.remainingTime} வினாடிகள் காத்திருக்கவும்`, 'warning');
             return;
@@ -918,6 +988,7 @@ class VillageEVM {
     }
 
     cancelVote() {
+        this.playClickSound();
         document.getElementById('confirmModal').style.display = 'none';
         this.selectedParty = null;
     }
@@ -988,6 +1059,8 @@ class VillageEVM {
 
     // ========== ADMIN PANEL FUNCTIONS ==========
     showAdminDashboard() {
+        this.playClickSound();
+        
         if (!this.isAdmin) {
             this.showToast('❌ நிர்வாகிகள் மட்டும்', 'error');
             return;
@@ -1035,13 +1108,13 @@ class VillageEVM {
                     <div class="admin-section">
                         <h3>📊 வாக்கு மேலாண்மை</h3>
                         <div class="admin-actions">
-                            <button class="admin-action-btn" onclick="villageEVM.exportVotesCSV()">
+                            <button class="admin-action-btn" onclick="villageEVM.exportVotesCSV(); villageEVM.playClickSound()">
                                 <span>📥</span> CSV ஏற்றுமதி
                             </button>
-                            <button class="admin-action-btn" onclick="villageEVM.exportVotesPDF()">
+                            <button class="admin-action-btn" onclick="villageEVM.exportVotesPDF(); villageEVM.playClickSound()">
                                 <span>📄</span> PDF ஏற்றுமதி
                             </button>
-                            <button class="admin-action-btn danger" onclick="villageEVM.resetVotes()">
+                            <button class="admin-action-btn danger" onclick="villageEVM.resetVotes(); villageEVM.playClickSound()">
                                 <span>🔄</span> மீட்டமை
                             </button>
                         </div>
@@ -1065,7 +1138,7 @@ class VillageEVM {
                                 <label>நிர்வாகி மின்னஞ்சல்</label>
                                 <input type="email" id="adminEmailSetting" value="${this.adminEmail}">
                             </div>
-                            <button class="admin-action-btn" onclick="villageEVM.saveSettings()">
+                            <button class="admin-action-btn" onclick="villageEVM.saveSettings(); villageEVM.playClickSound()">
                                 <span>💾</span> சேமி
                             </button>
                         </div>
@@ -1093,8 +1166,8 @@ class VillageEVM {
                     <span>✍️ ${this.escapeHtml(s.author)}</span>
                     <span class="suggestion-status ${s.status}">${s.status === 'pending' ? '⏳ நிலுவையில்' : '✅ பரிசீலனையில்'}</span>
                     <div class="admin-suggestion-actions">
-                        <button class="small-btn" onclick="villageEVM.markSuggestionReviewed(${s.id})">✓ முடிந்தது</button>
-                        <button class="small-btn danger" onclick="villageEVM.deleteSuggestion(${s.id})">🗑️ நீக்கு</button>
+                        <button class="small-btn" onclick="villageEVM.markSuggestionReviewed(${s.id}); villageEVM.playClickSound()">✓ முடிந்தது</button>
+                        <button class="small-btn danger" onclick="villageEVM.deleteSuggestion(${s.id}); villageEVM.playClickSound()">🗑️ நீக்கு</button>
                     </div>
                 </div>
             </div>
@@ -1102,6 +1175,7 @@ class VillageEVM {
     }
 
     markSuggestionReviewed(id) {
+        this.playClickSound();
         if (!this.isAdmin) return;
         
         const suggestion = this.suggestions.find(s => s.id === id);
@@ -1115,6 +1189,7 @@ class VillageEVM {
     }
 
     deleteSuggestion(id) {
+        this.playClickSound();
         if (!this.isAdmin) return;
         
         if (confirm('⚠️ இந்த கோரிக்கையை நீக்கவா?')) {
@@ -1127,6 +1202,7 @@ class VillageEVM {
     }
 
     exportVotesCSV() {
+        this.playClickSound();
         if (!this.isAdmin) return;
         
         let csv = "Rank,Party,Short Name,Votes,Percentage\n";
@@ -1153,6 +1229,7 @@ class VillageEVM {
     }
 
     exportVotesPDF() {
+        this.playClickSound();
         if (!this.isAdmin) return;
         
         const printWindow = window.open('', '_blank');
@@ -1210,6 +1287,7 @@ class VillageEVM {
     }
 
     saveSettings() {
+        this.playClickSound();
         if (!this.isAdmin) return;
         
         const newDelay = parseInt(document.getElementById('adminVoteDelay').value) * 1000;
@@ -1242,3 +1320,13 @@ class VillageEVM {
 // Create global instance
 console.log("🚀 Creating villageEVM instance...");
 const villageEVM = new VillageEVM();
+
+// Auto-play first sound to initialize audio context (helps with browser restrictions)
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        // Create and play a silent sound to unlock audio
+        const silentSound = new Audio();
+        silentSound.volume = 0.01;
+        silentSound.play().catch(() => {});
+    }, 1000);
+});

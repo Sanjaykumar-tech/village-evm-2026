@@ -1329,9 +1329,7 @@ body::before {
     outline: none;
 }
 
-/* ===== NEW FEATURES STYLES ===== */
-
-/* Dark Mode Variables */
+/* ===== PERFECT DARK MODE - ALL TEXT VISIBLE ===== */
 :root {
     --bg-primary: #f5f5f5;
     --text-primary: #262626;
@@ -1339,26 +1337,292 @@ body::before {
     --border-color: #e0e0e0;
 }
 
+/* PERFECT DARK MODE - White Text, Black Background */
 body.dark-mode {
-    --bg-primary: #1a1a1a;
-    --text-primary: #f0f0f0;
-    --card-bg: #2d2d2d;
-    --border-color: #404040;
-    background: var(--bg-primary);
-    color: var(--text-primary);
+    --bg-primary: #000000 !important;
+    --text-primary: #ffffff !important;
+    --card-bg: #1a1a1a !important;
+    --border-color: #444444 !important;
+    background: #000000 !important;
+    color: #ffffff !important;
 }
 
+/* Force ALL text to white in dark mode */
+body.dark-mode,
+body.dark-mode * {
+    color: #ffffff !important;
+}
+
+/* Fix ALL backgrounds */
 body.dark-mode .village-header,
 body.dark-mode .village-card,
 body.dark-mode .survey-panel,
 body.dark-mode .results-section,
-body.dark-mode .login-card {
-    background: var(--card-bg);
-    color: var(--text-primary);
-    border-color: var(--border-color);
+body.dark-mode .login-card,
+body.dark-mode .suggestion-card,
+body.dark-mode .modal-content,
+body.dark-mode .admin-modal-content,
+body.dark-mode .party-btn,
+body.dark-mode .tab-navigation,
+body.dark-mode .tab-btn,
+body.dark-mode .suggestion-form,
+body.dark-mode .suggestions-list,
+body.dark-mode .admin-dashboard,
+body.dark-mode .admin-section,
+body.dark-mode .admin-stat-card,
+body.dark-mode .admin-suggestion-item {
+    background: #1a1a1a !important;
+    border-color: #444444 !important;
 }
 
-/* Theme Toggle */
+/* Fix ALL headings */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode .village-title h1,
+body.dark-mode .survey-header h2,
+body.dark-mode .results-header h3,
+body.dark-mode .suggestion-form h3,
+body.dark-mode .suggestions-list h3,
+body.dark-mode .admin-dashboard h2,
+body.dark-mode .admin-section h3 {
+    color: #ffffff !important;
+}
+
+/* Fix ALL text elements */
+body.dark-mode .stat-label,
+body.dark-mode .stat-number,
+body.dark-mode .village-detail,
+body.dark-mode .party-votes,
+body.dark-mode .party-short,
+body.dark-mode .party-name-tamil,
+body.dark-mode .party-alliance,
+body.dark-mode .suggestion-title,
+body.dark-mode .suggestion-author,
+body.dark-mode .suggestion-date,
+body.dark-mode .suggestion-desc,
+body.dark-mode .suggestion-status,
+body.dark-mode .confirmation-text,
+body.dark-mode .instruction-text,
+body.dark-mode .instruction-badge,
+body.dark-mode .total-votes-text,
+body.dark-mode .admin-stat-number,
+body.dark-mode .admin-stat-info h3,
+body.dark-mode .admin-suggestion-header strong,
+body.dark-mode .admin-suggestion-desc,
+body.dark-mode .admin-suggestion-footer span,
+body.dark-mode .setting-item label {
+    color: #ffffff !important;
+}
+
+/* Fix input fields and placeholders */
+body.dark-mode .search-input,
+body.dark-mode .filter-select,
+body.dark-mode .suggestion-textarea,
+body.dark-mode #suggestionTitle,
+body.dark-mode #suggestionDesc,
+body.dark-mode #suggesterName,
+body.dark-mode #adminVoteDelay,
+body.dark-mode #adminEmailSetting {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+}
+
+body.dark-mode .search-input::placeholder,
+body.dark-mode .suggestion-textarea::placeholder,
+body.dark-mode #suggestionTitle::placeholder,
+body.dark-mode #suggestionDesc::placeholder,
+body.dark-mode #suggesterName::placeholder {
+    color: #cccccc !important;
+}
+
+/* Fix select dropdown options */
+body.dark-mode .filter-select option {
+    background: #333333 !important;
+    color: #ffffff !important;
+}
+
+/* Fix table */
+body.dark-mode .results-table th {
+    background: #333333 !important;
+    color: #ffffff !important;
+}
+
+body.dark-mode .results-table td {
+    color: #ffffff !important;
+    border-color: #444444 !important;
+}
+
+/* Fix progress bars */
+body.dark-mode .progress-bar {
+    background: #333333 !important;
+}
+
+body.dark-mode .progress-fill {
+    background: #ffffff !important;
+}
+
+/* Fix role badges */
+body.dark-mode .role-badge.admin {
+    background: #ffffff !important;
+    color: #000000 !important;
+}
+
+body.dark-mode .role-badge.user {
+    background: #444444 !important;
+    color: #ffffff !important;
+}
+
+/* Fix ALL buttons */
+body.dark-mode .action-btn,
+body.dark-mode .share-btn,
+body.dark-mode .reset-btn,
+body.dark-mode .logout-btn,
+body.dark-mode .confirm-btn,
+body.dark-mode .cancel-btn,
+body.dark-mode .submit-suggestion-btn,
+body.dark-mode .verify-btn,
+body.dark-mode .login-btn,
+body.dark-mode .admin-action-btn,
+body.dark-mode .small-btn,
+body.dark-mode .close-modal,
+body.dark-mode .tab-btn,
+body.dark-mode .party-btn {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+}
+
+body.dark-mode .action-btn:hover,
+body.dark-mode .share-btn:hover,
+body.dark-mode .reset-btn:hover,
+body.dark-mode .logout-btn:hover,
+body.dark-mode .admin-action-btn:hover,
+body.dark-mode .tab-btn:hover,
+body.dark-mode .party-btn:hover {
+    background: #444444 !important;
+}
+
+/* Fix chart */
+body.dark-mode .chart-container {
+    background: #1a1a1a !important;
+}
+
+body.dark-mode .legend-item span {
+    color: #ffffff !important;
+}
+
+/* Fix voter status */
+body.dark-mode .voter-status.voted {
+    background: #2e7d3240 !important;
+    color: #a5d6a7 !important;
+}
+
+body.dark-mode .voter-status.not-voted {
+    background: #c6282840 !important;
+    color: #ef9a9a !important;
+}
+
+/* Fix suggestion form specifically */
+body.dark-mode .suggestion-form {
+    background: #1a1a1a !important;
+    border-color: #444444 !important;
+}
+
+body.dark-mode .suggestion-form h3 {
+    color: #ffffff !important;
+    border-bottom-color: #444444 !important;
+}
+
+/* Fix suggestions container */
+body.dark-mode .suggestions-container {
+    background: transparent !important;
+}
+
+/* Fix admin modal */
+body.dark-mode .admin-modal-content {
+    background: #1a1a1a !important;
+}
+
+body.dark-mode .admin-modal-content h2,
+body.dark-mode .admin-modal-content h3,
+body.dark-mode .admin-modal-content p,
+body.dark-mode .admin-modal-content span,
+body.dark-mode .admin-modal-content div {
+    color: #ffffff !important;
+}
+
+/* Fix settings form */
+body.dark-mode .settings-form {
+    background: #1a1a1a !important;
+}
+
+body.dark-mode .setting-item input {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+}
+
+/* Fix admin stats */
+body.dark-mode .admin-stat-card {
+    background: #1a1a1a !important;
+    border-color: #444444 !important;
+}
+
+body.dark-mode .admin-stat-card h3,
+body.dark-mode .admin-stat-card p {
+    color: #ffffff !important;
+}
+
+/* Fix admin suggestions */
+body.dark-mode .admin-suggestion-item {
+    background: #1a1a1a !important;
+    border-color: #444444 !important;
+}
+
+body.dark-mode .admin-suggestion-header strong,
+body.dark-mode .admin-suggestion-desc,
+body.dark-mode .admin-suggestion-footer span {
+    color: #ffffff !important;
+}
+
+/* Fix confirmation modal */
+body.dark-mode #confirmModal .modal-content {
+    background: #1a1a1a !important;
+}
+
+body.dark-mode #confirmModal h3,
+body.dark-mode #confirmModal .modal-party,
+body.dark-mode #confirmModal .modal-party-name,
+body.dark-mode #confirmModal .modal-party-tamil,
+body.dark-mode #confirmModal .confirmation-text {
+    color: #ffffff !important;
+}
+
+/* Fix toast messages */
+body.dark-mode .toast {
+    background: #333333 !important;
+    color: #ffffff !important;
+    border-color: #555555 !important;
+}
+
+body.dark-mode .toast.success {
+    background: #2e7d32 !important;
+}
+
+body.dark-mode .toast.warning {
+    background: #b8860b !important;
+    color: #ffffff !important;
+}
+
+/* Fix winner canvas text */
+body.dark-mode #winnerCanvas {
+    color: #ffffff !important;
+}
+
+/* Theme Toggle Button */
 .theme-toggle {
     position: fixed;
     top: 20px;
@@ -1387,8 +1651,8 @@ body.dark-mode .login-card {
 }
 
 body.dark-mode .theme-btn {
-    background: var(--pure-white);
-    color: var(--pure-black);
+    background: #ffffff !important;
+    color: #000000 !important;
 }
 
 .dark-icon {
@@ -1464,10 +1728,6 @@ body.dark-mode .dark-icon {
     padding: 20px;
     background: var(--pure-white);
     border: var(--border-light);
-}
-
-body.dark-mode .chart-container {
-    background: var(--card-bg);
 }
 
 .chart-legend {
@@ -1947,4 +2207,36 @@ body.dark-mode .chart-container {
 * {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* ===== TOTAL VOTERS NUMBER - FINAL FIX ===== */
+#votersCount,
+.stat-number,
+.village-stats .stat-number,
+.village-stats #votersCount {
+    color: #000000 !important;
+    font-weight: 800 !important;
+    font-size: 28px !important;
+    background: transparent !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+}
+
+body.dark-mode #votersCount,
+body.dark-mode .stat-number,
+body.dark-mode .village-stats .stat-number,
+body.dark-mode .village-stats #votersCount {
+    color: #000000 !important;
+    text-shadow: 0 0 5px rgba(255,255,255,0.3) !important;
+}
+
+/* Fix stat labels */
+.stat-label {
+    color: #333333 !important;
+    font-weight: 600 !important;
+}
+
+body.dark-mode .stat-label {
+    color: #dddddd !important;
 }

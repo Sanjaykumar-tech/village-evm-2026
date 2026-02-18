@@ -22,7 +22,7 @@
 <body>
     <!-- Dark Mode Toggle -->
     <div class="theme-toggle">
-        <button id="darkModeToggle" class="theme-btn" onclick="villageEVM.toggleDarkMode()">
+        <button id="darkModeToggle" class="theme-btn" onclick="villageEVM.toggleDarkMode(); villageEVM.playClickSound()">
             <span class="light-icon">☀️</span>
             <span class="dark-icon">🌙</span>
         </button>
@@ -47,13 +47,13 @@
                     <label>🔢 OTP குறியீடு</label>
                     <div class="otp-input-group">
                         <input type="text" id="otpInput" maxlength="6" placeholder="000000" pattern="[0-9]{6}">
-                        <button type="button" id="verifyOtpBtn" class="verify-btn">சரிபார்</button>
+                        <button type="button" id="verifyOtpBtn" class="verify-btn" onclick="villageEVM.playClickSound()">சரிபார்</button>
                     </div>
                     <div class="otp-timer" id="otpTimer">OTP காலாவதியாக 5:00</div>
                 </div>
                 
-                <button type="button" id="sendOtpBtn" class="login-btn">📨 OTP அனுப்பு</button>
-                <button type="button" id="loginWithOtpBtn" class="login-btn hidden">🔓 உள்நுழைக</button>
+                <button type="button" id="sendOtpBtn" class="login-btn" onclick="villageEVM.playClickSound()">📨 OTP அனுப்பு</button>
+                <button type="button" id="loginWithOtpBtn" class="login-btn hidden" onclick="villageEVM.playClickSound()">🔓 உள்நுழைக</button>
             </form>
             
             <div class="login-footer">
@@ -86,10 +86,10 @@
                         </div>
                         <div class="stat-item">
                             <div class="stat-label">மொத்த வாக்காளர்கள்</div>
-                            <div class="stat-number" id="votersCount">1456</div>
+                            <div class="stat-number" id="votersCount">1462</div>
                         </div>
                     </div>
-                    <button class="logout-btn" onclick="villageEVM.logout()">
+                    <button class="logout-btn" onclick="villageEVM.logout(); villageEVM.playClickSound()">
                         <span>🚪</span> வெளியேறு
                     </button>
                 </div>
@@ -118,22 +118,22 @@
 
             <!-- Tab Navigation -->
             <div class="tab-navigation">
-                <button class="tab-btn active" onclick="villageEVM.switchTab('vote')" id="tabVoteBtn">
+                <button class="tab-btn active" onclick="villageEVM.switchTab('vote'); villageEVM.playClickSound()" id="tabVoteBtn">
                     <span>🗳️</span> வாக்களி
                 </button>
-                <button class="tab-btn" onclick="villageEVM.switchTab('suggestions')" id="tabSuggestBtn">
+                <button class="tab-btn" onclick="villageEVM.switchTab('suggestions'); villageEVM.playClickSound()" id="tabSuggestBtn">
                     <span>💡</span> கோரிக்கைகள்
                 </button>
-                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('results')" id="tabResultsBtn">
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('results'); villageEVM.playClickSound()" id="tabResultsBtn">
                     <span>📊</span> முடிவுகள்
                 </button>
-                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('voters')" id="tabVotersBtn">
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('voters'); villageEVM.playClickSound()" id="tabVotersBtn">
                     <span>👥</span> வாக்காளர்கள்
                 </button>
-                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('charts')" id="tabChartsBtn">
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.switchTab('charts'); villageEVM.playClickSound()" id="tabChartsBtn">
                     <span>📈</span> விளக்கப்படம்
                 </button>
-                <button class="tab-btn admin-only hidden" onclick="villageEVM.showAdminDashboard()" id="tabAdminBtn">
+                <button class="tab-btn admin-only hidden" onclick="villageEVM.showAdminDashboard(); villageEVM.playClickSound()" id="tabAdminBtn">
                     <span>⚙️</span> நிர்வாகம்
                 </button>
             </div>
@@ -176,7 +176,7 @@
                     <div class="survey-header">
                         <h2><span>💡</span> மக்களின் கோரிக்கைகள்</h2>
                         <div class="share-actions">
-                            <button class="share-btn" onclick="villageEVM.shareSuggestionsWhatsApp()">
+                            <button class="share-btn" onclick="villageEVM.shareSuggestionsWhatsApp(); villageEVM.playClickSound()">
                                 <span>📱</span> WhatsApp
                             </button>
                         </div>
@@ -187,7 +187,7 @@
                         <input type="text" id="suggestionTitle" class="search-input" placeholder="தலைப்பு (எ.கா: புதிய சாலை)" maxlength="100">
                         <textarea id="suggestionDesc" class="suggestion-textarea" placeholder="விவரம்..." rows="3" maxlength="500"></textarea>
                         <input type="text" id="suggesterName" class="search-input" placeholder="உங்கள் பெயர் (விரும்பினால்)">
-                        <button class="submit-suggestion-btn" onclick="villageEVM.addSuggestion()">
+                        <button class="submit-suggestion-btn" onclick="villageEVM.addSuggestion(); villageEVM.playClickSound()">
                             <span>📤</span> கோரிக்கை சமர்ப்பி
                         </button>
                     </div>
@@ -205,13 +205,13 @@
                     <div class="results-header">
                         <h3><span>📊</span> நேரடி முடிவுகள் - குணமங்கலம்</h3>
                         <div class="result-actions">
-                            <button class="action-btn" onclick="villageEVM.printResults()">
+                            <button class="action-btn" onclick="villageEVM.printResults(); villageEVM.playClickSound()">
                                 <span>🖨️</span> அச்சிடு
                             </button>
-                            <button class="action-btn" onclick="villageEVM.shareResultsWhatsApp()">
+                            <button class="action-btn" onclick="villageEVM.shareResultsWhatsApp(); villageEVM.playClickSound()">
                                 <span>📱</span> WhatsApp
                             </button>
-                            <button class="reset-btn admin-only" onclick="villageEVM.resetVotes()">
+                            <button class="reset-btn admin-only" onclick="villageEVM.resetVotes(); villageEVM.playClickSound()">
                                 <span>🔄</span> மீட்டமை
                             </button>
                         </div>
@@ -245,7 +245,7 @@
                     <div class="results-header">
                         <h3><span>👥</span> வாக்காளர்கள் பட்டியல்</h3>
                         <div class="result-actions">
-                            <button class="action-btn" onclick="villageEVM.printVotersList()">
+                            <button class="action-btn" onclick="villageEVM.printVotersList(); villageEVM.playClickSound()">
                                 <span>🖨️</span> அச்சிடு
                             </button>
                         </div>
@@ -293,7 +293,7 @@
         <div class="modal-content admin-modal-content">
             <div class="modal-header">
                 <h2>⚙️ நிர்வாக கட்டுப்பாட்டு பலகம்</h2>
-                <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'">&times;</button>
+                <button class="close-modal" onclick="document.getElementById('adminModal').style.display='none'; villageEVM.playClickSound()">&times;</button>
             </div>
             <div id="adminModalBody" class="modal-body"></div>
         </div>
@@ -310,8 +310,8 @@
                 <span class="confirmation-text">இந்த கட்சிக்கு வாக்களிக்க உறுதியா?</span>
             </div>
             <div class="modal-buttons">
-                <button onclick="villageEVM.confirmVote()" class="confirm-btn">ஆம், வாக்களி</button>
-                <button onclick="villageEVM.cancelVote()" class="cancel-btn">இல்லை, ரத்து</button>
+                <button onclick="villageEVM.confirmVote(); villageEVM.playClickSound()" class="confirm-btn">ஆம், வாக்களி</button>
+                <button onclick="villageEVM.cancelVote(); villageEVM.playClickSound()" class="cancel-btn">இல்லை, ரத்து</button>
             </div>
         </div>
     </div>
@@ -321,6 +321,17 @@
 
     <!-- Toast -->
     <div id="toast" class="toast"></div>
+
+    <!-- Audio Elements for Sounds - FIXED URLs -->
+    <audio id="clickSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="winnerSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/party-horn-01.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="crackerSound" preload="auto">
+        <source src="https://www.soundjay.com/misc/sounds/fireworks-01.mp3" type="audio/mpeg">
+    </audio>
 
     <script src="script.js"></script>
 </body>
